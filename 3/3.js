@@ -1,95 +1,37 @@
-const products = document.querySelector('.products');  
-const productAdd = products.querySelectorAll('.product__add');  
-const quantityControlInc = products.querySelectorAll('.product__quantity-control_inc'); 
-const quantityControlDec = products.querySelectorAll('.product__quantity-control_dec'); 
+const quantityControl = document.querySelectorAll(".product__quantity-control");
+const currentProducts = document.querySelectorAll(".product__add")
+const carts = document.querySelector(".cart__products");
 
-const product = document.querySelectorAll('.product'); 
-const cart = document.querySelector('.cart');  
-let cartProducts;  
-
-
-
-function productsCartOperate(event) { 
-    
-    elem = event.target; 
-    
-    for (let i = 0; i < productAdd.length; i++) {           
-    
-        if (
-            (elem === productAdd[i]) && 
-            (Number(productAdd[i].previousElementSibling.children[1].
-            textContent) > 0)  
-            ) {
-               
-                let productId = product[i].dataset.id;  
-                let productImg = product[i].querySelector('img').
-                getAttribute('src');      
-                let productCount = quantityControlInc[i].previousElementSibling.textContent; 
-                addProduct(productId, productImg, productCount);  
-                productAdd[i].previousElementSibling.children[1].
-                    textContent = 1; 
-        };
-
-        if (elem === quantityControlInc[i]) {  
-            
-            quantityControlInc[i].previousElementSibling.textContent = 
-                Number(quantityControlInc[i].previousElementSibling.textContent) +1;  
-        };
-
-        if (elem === quantityControlDec[i]) {  
-
-            let decValue = Number(quantityControlDec[i].nextElementSibling.textContent);
-            if (decValue > 0) {
-                quantityControlDec[i].nextElementSibling.textContent = decValue -1; 
-            };
-        };
-    };
-
-    cartProducts = cart.querySelectorAll('.cart__products');
-
-    if (cartProducts !== null){ 
-        for (let d = 0; d < cartProducts.length; d++ ) {  
-     
-            if (elem === cartProducts[d].querySelector('.prod__remove')) { 
-                elem.parentElement.parentElement.remove();
-
-                if (cartProducts.length === 1) cart.classList.remove('cart_not_empty');
-            };
-                    
-        };
-    };
-};
-
-function addProduct(productId, productImg, productCount) {  
-    
-    cartProducts = cart.querySelectorAll('.cart__products'); 
-    let currentNamesProductsCount = cartProducts.length;  
-    let productIn = false; 
-    
-    for (let m = 0; m < currentNamesProductsCount; m++) { 
-    
-        if (currentNamesProductsCount > 0) {
-            if (cartProducts[m].querySelector('.cart__product').dataset.id === productId) {
-                cartProducts[m].querySelector('.cart__product-count').textContent = 
-                     Number(cartProducts[m].querySelector('.cart__product-count').textContent) + Number(productCount);
-            };
-        };
-    };    
+quantityControl.forEach((el) => {
+    el.addEventListener("click", (e) => {
+        const targetCount = e.target.closest(".product__quantity-controls"); 
+        let targetValue = targetCount.querySelector(".product__quantity-value");
         
-    if (!productIn) {
-            cart.insertAdjacentHTML('beforeend', `
-                        <div class="cart__products">
-                            <div class="cart__product" data-id="${productId}">
-                                <img class="cart__product-image" src="${productImg}">
-                                <div class="cart__product-count">${productCount}</div>
-                                <a href="#" class="prod__remove">&times;</a>
-                            </div>
-                        </div>`); 
-    };
+        if (targetValue.textContent >= 2 && e.target.classList.contains("product__quantity-control_dec")) {
+           --targetValue.textContent;
+        }
+        if (e.target.classList.contains("product__quantity-control_inc")) {
+             ++targetValue.textContent; 
+        }
+    }); 
+});
 
-    if (currentNamesProductsCount === 0) cart.classList.add('cart_not_empty');
-    
-};
-
-
-document.addEventListener('click', productsCartOperate) 
+currentProducts.forEach((el) => {
+    el.addEventListener("click", (e) => {
+        const targetProduct = e.target.closest(".product");
+        const targetId = targetProduct.getAttribute("data-id");
+        const targetImage = targetProduct.querySelector(".product__image").getAttribute("src");
+        let targetCount = +targetProduct.querySelector(".product__quantity-value").textContent;
+        const addedProduct = document.createElement("div");
+        const innerText = `<div class="cart__product" data-id="${targetId}"><img class="cart__product-image" src="${targetImage}"><div class="cart__product-count">${targetCount}</div></div>`;
+        const count = Array.from(carts.children).find(item => item.getAttribute("data-id") === targetId);
+       
+            if (!count) {
+            carts.appendChild(addedProduct);
+            addedProduct.outerHTML = innerText;
+        } else {
+            let countInCart = targetCount + +count.querySelector(".cart__product-count").textContent;
+            count.querySelector(".cart__product-count").textContent = countInCart;
+        }
+    });
+});
